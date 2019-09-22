@@ -1,4 +1,5 @@
 module.exports = {
+  pathPrefix: "/pxcode",
   siteMetadata: {
     title: `pxcode`,
     description: `React live editor`,
