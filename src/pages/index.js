@@ -31,27 +31,8 @@ const IndexPage = () => {
     setCode(e)
   }
 
-  var logger = document.getElementById('log');
-  console.log = function () {
-    old(arguments);
-    for (var i = 0; i < arguments.length; i++) {
-      if (typeof arguments[i] == 'object') {
-        if (logger) {
-          logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(arguments[i], undefined, 2) : arguments[i]) + '<br />';
-        }
-        old(arguments[i]);
-      } else {
-        if (logger) {
-          logger.innerHTML += arguments[i] + '<br />';
-        }
-
-        old(arguments[i]);
-      }
-    }
-  }
   const injectCode = e => {
     var logger = document.getElementById('log');
-
     try {
       var a = eval(e);
       logger.innerHTML += stringify(a) + '<br />';
@@ -95,14 +76,13 @@ const IndexPage = () => {
 
             <div style={{ position: 'fixed', height: '150', width: '100%' }}>
               <LiveEditor onChange={e => prettifyAndSet(e)} />
-              <pre style={{ overflow: 'scroll' }} id="log">pxcode loaded...</pre>
-
+              <pre style={{ overflow: 'scroll' }} id="log">pxcode loaded...<br /></pre>
             </div>
 
           </div>
           <div style={{ position: "fixed", bottom: 0 }}>
-            <button onClick={e => saveSnippet()}>Save</button>
-            <button onClick={e => showSnippet(!show)}>Show</button>
+            <button onClick={() => saveSnippet()}>Save</button>
+            <button onClick={() => showSnippet(!show)}>Show</button>
             <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
           </div>
           <LiveError />
