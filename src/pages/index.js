@@ -2,8 +2,11 @@ import React, { useEffect, useState, lazy, Suspense } from "react"
 
 import Layout from "../components/layout"
 import SEO from "../components/seo"
+import { stringify } from 'flatted';
+
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live"
 const snippet = `function Component() {
+  console.log('welcome to pxcode');
   const [a, b] = useState('world');
   return (
   <div style={{ cursor: 'pointer', paddingTop: '100px', textAlign: 'center', margin: 'auto' }}><div onClick={e => a === 'world' ? b('world!') : b('world')}> Hello {a}</div ></div>
@@ -11,9 +14,10 @@ const snippet = `function Component() {
 
   }
   
-  render(<Component />);
+  render(<><Component /></>);
   `
 const scope = { lazy, Suspense, useEffect, useState }
+
 const IndexPage = () => {
   const [code, setCode] = useState("")
   const [saved, saveCode] = useState("")
@@ -22,14 +26,59 @@ const IndexPage = () => {
     const snippets = [code]
     saveCode(snippets)
   }
+  var old = console.log;
   const prettifyAndSet = e => {
     setCode(e)
   }
 
+  var logger = document.getElementById('log');
+  console.log = function () {
+    old(arguments);
+    for (var i = 0; i < arguments.length; i++) {
+      if (typeof arguments[i] == 'object') {
+        if (logger) {
+          logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(arguments[i], undefined, 2) : arguments[i]) + '<br />';
+        }
+        old(arguments[i]);
+      } else {
+        if (logger) {
+          logger.innerHTML += arguments[i] + '<br />';
+        }
+
+        old(arguments[i]);
+      }
+    }
+  }
+  const injectCode = e => {
+    var logger = document.getElementById('log');
+
+    try {
+      var a = eval(e);
+      logger.innerHTML += stringify(a) + '<br />';
+    } catch (e) {
+      logger.innerHTML += e + '<br />';
+    }
+  }
   return (
     <Layout>
       <SEO title="pxcode" />
       <div style={{ marginBottom: `1.45rem` }}>
+        {saved.length && show ? (
+          <div
+            style={{
+              width: "100%",
+              paddingBottom: 10,
+              position: "fixed",
+              overflow: "scroll",
+            }}
+          >
+            {saved.map((v, i) => (
+              <div style={{ padding: 10, backgroundColor: 'pink' }} key={i}>
+                {v}
+              </div>
+            ))}
+          </div>
+        ) : null}
         <LiveProvider noInline={true} scope={scope} code={code || snippet}>
           <div style={{ width: "100%", height: "50%" }}>
             <LivePreview />
@@ -43,32 +92,23 @@ const IndexPage = () => {
               bottom: 0,
             }}
           >
-            <LiveEditor onChange={e => prettifyAndSet(e)} />
-            {saved.length && show ? (
-              <div
-                style={{
-                  width: "100%",
-                  paddingBottom: 10,
-                  position: "fixed",
-                  overflow: "scroll",
-                }}
-              >
-                {saved.map((v, i) => (
-                  <div style={{ padding: 10 }} key={i}>
-                    {v}
-                  </div>
-                ))}
-              </div>
-            ) : null}
+
+            <div style={{ position: 'fixed', height: '150', width: '100%' }}>
+              <LiveEditor onChange={e => prettifyAndSet(e)} />
+              <pre style={{ overflow: 'scroll' }} id="log">pxcode loaded...</pre>
+
+            </div>
+
           </div>
           <div style={{ position: "fixed", bottom: 0 }}>
             <button onClick={e => saveSnippet()}>Save</button>
             <button onClick={e => showSnippet(!show)}>Show</button>
+            <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
           </div>
           <LiveError />
         </LiveProvider>
       </div>
-    </Layout>
+    </Layout >
   )
 }
 
