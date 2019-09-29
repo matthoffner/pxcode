@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "author": "Matt Hoffner",
   "dependencies": {
+    "@babel/parser": "^7.6.2",
     "flatted": "^2.0.1",
     "gatsby": "^2.15.20",
     "gatsby-image": "^2.2.20",
@@ -14,11 +15,16 @@
     "gatsby-plugin-sharp": "^2.2.25",
     "gatsby-source-filesystem": "^2.1.26",
     "gatsby-transformer-sharp": "^2.2.16",
+    "html2canvas": "^1.0.0-rc.5",
+    "minipass": "2.7.0",
+    "prettier": "^1.18.2",
+    "prismjs": "^1.17.1",
     "prop-types": "^15.7.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-helmet": "^5.2.1",
-    "react-live": "^2.2.0"
+    "react-live": "^2.2.0",
+    "react-simple-code-editor": "^0.9.14"
   },
   "devDependencies": {
     "gh-pages": "^2.1.1",
@@ -36,5 +42,8 @@
     "start": "npm run develop",
     "serve": "gatsby serve",
     "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing \""
+  },
+  "resolutions": {
+    "minipass": "2.7.0"
   }
 }

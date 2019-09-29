@@ -1,17 +1,23 @@
 import React, { useEffect, useState, lazy, Suspense } from "react"
-
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 import { stringify } from 'flatted';
-
-import { LiveProvider, LiveEditor, LiveError, LivePreview } from "react-live"
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import { LiveProvider, LiveError, LivePreview } from "react-live"
+import html2canvas from 'html2canvas'
 const snippet = `function Component() {
   console.log('welcome to pxcode');
   const [a, b] = useState('world');
   return (
-  <div style={{ cursor: 'pointer', paddingTop: '100px', textAlign: 'center', margin: 'auto' }}><div onClick={e => a === 'world' ? b('world!') : b('world')}> Hello {a}</div ></div>
-  )
-
+      <div style={{ cursor: 'pointer', paddingTop: '100px', textAlign: 'center', margin: 'auto' }}>
+        <div onClick={e => a === 'world' ? b('world!') : b('world')}>
+          Hello {a}
+        </div>
+      </div>
+    )
   }
   
   render(<><Component /></>);
@@ -22,13 +28,35 @@ const IndexPage = () => {
   const [code, setCode] = useState("")
   const [saved, saveCode] = useState("")
   const [show, showSnippet] = useState(true)
+  const debug = console.log;
+  let snippets = [];
   const saveSnippet = () => {
-    const snippets = [code]
-    saveCode(snippets)
+    const livePreview = document.getElementById('livePreview');
+    html2canvas(document.getElementById('livePreview')).then(canvas => {
+      snippets = [{
+        snapshot: canvas.toDataURL(),
+        savedCode: code
+      }, ...saved]
+      return snippets;
+    }).then(saved => {
+      console.log(saved);
+      saveCode(saved);
+    });
   }
-  var old = console.log;
-  const prettifyAndSet = e => {
-    setCode(e)
+  var logger = document.getElementById('log');
+
+  console.log = function () {
+    for (var i = 0; i < arguments.length; i++) {
+      if (typeof arguments[i] == 'object') {
+        if (logger) {
+          logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(arguments[i], undefined, 2) : arguments[i]) + '<br />'; logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(arguments[i], undefined, 2) : arguments[i]) + '<br />';
+        }
+      } else {
+        if (logger) {
+          logger.innerHTML += arguments[i] + '<br />';
+        }
+      }
+    }
   }
 
   const injectCode = e => {
@@ -54,39 +82,46 @@ const IndexPage = () => {
             }}
           >
             {saved.map((v, i) => (
-              <div style={{ padding: 10, backgroundColor: 'pink' }} key={i}>
-                {v}
+              <div style={{ padding: 10, backgroundColor: 'gold' }} key={i}>
+                <div style={{ width: '30%', display: 'inline-block' }}>
+                  <img width="100%" src={`data:image/jpeg;charset=utf-8;base64${v.snapshot}`} />
+                </div>
+                <div style={{ width: '70%', display: 'inline-block' }}>
+                  {v.savedCode}
+                </div>
               </div>
             ))}
           </div>
         ) : null}
+
+
         <LiveProvider noInline={true} scope={scope} code={code || snippet}>
-          <div style={{ width: "100%", height: "50%" }}>
+          <div id="livePreview">
             <LivePreview />
           </div>
-          <div
-            style={{
-              border: "1px solid black",
-              width: "100%",
-              height: "50%",
-              position: "fixed",
-              bottom: 0,
-            }}
-          >
-
-            <div style={{ position: 'fixed', height: '150', width: '100%' }}>
-              <LiveEditor onChange={e => prettifyAndSet(e)} />
-              <pre style={{ overflow: 'scroll' }} id="log">pxcode loaded...<br /></pre>
+          <div style={{ position: 'fixed', bottom: 0 }}>
+            <Editor
+              value={code || snippet}
+              onValueChange={e => setCode(e)}
+              highlight={code => highlight(code, languages.js)}
+              padding={10}
+              style={{
+                fontFamily: '"Fira code", "Fira Mono", monospace',
+                fontSize: 12,
+              }}
+            />
+            <pre style={{ overflowY: 'auto', height: '250px' }} id="log">pxcode loaded...<br /></pre>
+            <LiveError />
+            <div>
+              <button onClick={() => saveSnippet()}>Save</button>
+              <button onClick={() => showSnippet(!show)}>Show</button>
+              <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
             </div>
-
           </div>
-          <div style={{ position: "fixed", bottom: 0 }}>
-            <button onClick={() => saveSnippet()}>Save</button>
-            <button onClick={() => showSnippet(!show)}>Show</button>
-            <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
-          </div>
-          <LiveError />
         </LiveProvider>
+
+
+
       </div>
     </Layout >
   )
