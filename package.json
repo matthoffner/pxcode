@@ -24,7 +24,8 @@
     "react-dom": "^16.9.0",
     "react-helmet": "^5.2.1",
     "react-live": "^2.2.0",
-    "react-simple-code-editor": "^0.9.14"
+    "react-simple-code-editor": "^0.9.14",
+    "recast": "^0.18.2"
   },
   "devDependencies": {
     "gh-pages": "^2.1.1",
