@@ -12,14 +12,23 @@ import constructApp from './build-html';
 const snippet = `function Component() {
   React.useEffect(() => {
     console.log(' 🎉 welcome to pxcode  🎉');
-  });
-  const [color, setColor] = React.useState('gold');
+  }, []);
   return (
-  <div style={{ fontFamily: 'Comic Sans MS' }}>
+  <div style={{ padding: '10px', height: '100%', width: '100%', position: 'fixed', fontFamily: 'Comic Sans MS' }}>
     <h1>Welcome to pxcode</h1>
     <div>
-      Build React apps on your phone, export them as PWAs. 
+      Build React apps on your phone, deploy as PWA. 
     </div>
+    <h2>package.json shoutouts</h2>
+    <li>
+      react-live
+    </li>
+    <li>
+      react-simple-code-editor
+    </li>
+    <li>
+      gatsby
+    </li>
   </div>
     )
   }
@@ -33,6 +42,7 @@ const IndexPage = () => {
   const [saved, saveCode] = useState("")
   const [show, showSnippet] = useState(true)
   const [exported, setExport] = useState("")
+  const [showPreview, setShowPreview] = useState("")
   const debug = console.log;
   let snippets = [];
   const saveSnippet = () => {
@@ -50,7 +60,7 @@ const IndexPage = () => {
   if (process.browser) {
     var logger = document.getElementById('log');
 
-    /*
+
     console.log = function () {
       for (var i = 0; i < arguments.length; i++) {
         if (typeof arguments[i] == 'object') {
@@ -64,7 +74,6 @@ const IndexPage = () => {
         }
       }
     }
-    */
   }
   const makeTextFile = (text) => {
     var data = new Blob([text], { type: 'text/plain' });
@@ -85,67 +94,78 @@ const IndexPage = () => {
   return (
     <Layout>
       <SEO title="pxcode" />
-      <div>
-        {saved.length && show ? (
-          <div
-            style={{
-              width: "100%",
-              paddingBottom: 10,
-              position: "fixed",
-              overflow: "scroll",
-              zIndex: 1
-            }}
-          >
-            {saved.map((v, i) => (
-              <div style={{ padding: 10, backgroundColor: 'gold' }} key={i}>
-                <div style={{ width: '30%', display: 'inline-block', margin: '10px' }}>
-                  <img width="100%" src={`data:image/jpeg;charset=utf-8;base64${v.snapshot}`} />
-                </div>
-                <textarea value={v.savedCode} disabled={true}
-                  style={{ margin: '10', height: '250px', width: '60%', display: 'inline-block' }}
-                  className="npm__react-simple-code-editor__textarea" />
-                <div>filename.js</div>
-                <button onClick={() => {
-                  console.log(v.savedCode);
-                  const app = constructApp(v.savedCode);
-                  const url = makeTextFile(app);
-                  setExport(url);
-                }}>export</button>
+      {saved.length && show ? (
+        <div className="blueprint"
+          style={{
+            width: "100%",
+            paddingBottom: 10,
+            position: "fixed",
+            zIndex: 1,
+            cursor: 'pointer',
+            'overlow-y': 'auto'
+          }}
+        >
+          {saved.map((v, i) => (
+            <div style={{ padding: '5px', color: 'white' }} key={i}>
+              <div className="box" style={{ width: '30%', display: 'inline-block', margin: '10px' }}>
+                <img width="100%" src={`data:image/jpeg;charset=utf-8;base64${v.snapshot}`} />
               </div>
-            ))}
-            {exported && <div><a download="filename.html" href={exported} class="language-jsx">{exported}</a>
-              <button onClick={() => setExport(null)}>Back</button></div>}
-            <div style={{ position: 'fixed', bottom: 0 }}>
+              <div className="box" style={{ display: 'inline' }}>
+                <textarea value={v.savedCode} disabled={true}
+                  style={{ height: '250px', width: '60%', display: 'inline-block' }}
+                  className="npm__react-simple-code-editor__textarea" />
+              </div>
+              <div>filename.js</div>
+              <a href="#" style={{ color: 'white' }} onClick={() => {
+                const app = constructApp(v.savedCode);
+                const url = makeTextFile(app);
+                setExport(url);
+              }}>export</a>
+              <br />
+              <a onClick={() => {
+                setCode(v.savedCode);
+                showSnippet(false);
+              }} href="#" style={{ color: 'white ' }}>load</a>
+            </div>
+          ))}
+          {exported && <div><a download="filename.html" href={exported} class="language-jsx">{exported}</a>
+            <button onClick={() => setExport(null)}>Back</button></div>}
+          <div style={{ position: 'fixed', bottom: 0 }}>
+            <button onClick={() => showSnippet(!show)}>Show</button>
+          </div>
+        </div>
+      ) :
+        <LiveProvider noInline={true} scope={scope} code={code || snippet}>
+          <div id="livePreview" style={{ height: '100%', position: 'fixed', width: '100%' }}>
+            <LivePreview />
+          </div>
+          {!showPreview && <div style={{ backgroundColor: 'white', position: 'fixed', bottom: 0 }}>
+            <Editor
+              value={code || snippet}
+              onValueChange={e => setCode(e)}
+              highlight={code => highlight(code, languages.js)}
+              padding={10}
+              style={{
+                fontFamily: '"Fira code", "Fira Mono", monospace',
+                fontSize: 10,
+                width: '100%'
+              }}
+            />
+            <pre style={{ overflowY: 'auto', height: '50px' }} id="log">pxcode loaded...<br /></pre>
+            <LiveError />
+            <div>
               <button onClick={() => saveSnippet()}>Save</button>
               <button onClick={() => showSnippet(!show)}>Show</button>
+              <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
+              <button style={{ position: 'fixed', right: 0 }} onClick={() => setShowPreview(true)}>Preview</button>
             </div>
-          </div>
-        ) :
-          <LiveProvider noInline={true} scope={scope} code={code || snippet}>
-            <div id="livePreview" style={{ height: '60%', position: 'fixed', width: '100%' }}>
-              <LivePreview />
-            </div>
-            <div style={{ position: 'fixed', bottom: 0 }}>
-              <Editor
-                value={code || snippet}
-                onValueChange={e => setCode(e)}
-                highlight={code => highlight(code, languages.js)}
-                padding={10}
-                style={{
-                  fontFamily: '"Fira code", "Fira Mono", monospace',
-                  fontSize: 14,
-                }}
-              />
-              <pre style={{ overflowY: 'auto', height: '250px' }} id="log">pxcode loaded...<br /></pre>
-              <LiveError />
-              <div>
-                <button onClick={() => saveSnippet()}>Save</button>
-                <button onClick={() => showSnippet(!show)}>Show</button>
-                <input onKeyDown={e => e.keyCode === 13 && injectCode(e.target.value)} />
-              </div>
-            </div>
-          </LiveProvider>}
-      </div>
+          </div>}
+          {showPreview && <div style={{ position: 'fixed', bottom: 0 }}>
+            <button onClick={() => saveSnippet()}>Save</button>
+            <button onClick={() => showSnippet(!show)}>Show</button>
+            <button style={{ position: 'fixed', right: 0 }} onClick={() => setShowPreview(false)}>Editor</button>
+          </div>}
+        </LiveProvider>}
     </Layout >
   )
 }
